@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>190217884548-lq6fnf4lk813hkt6f8t8esrmv2n641k0.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.190217884548-lq6fnf4lk813hkt6f8t8esrmv2n641k0</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAZyGuOeD2fs-85Vi18koKd9gBWJtGQOow</string>
+	<key>GCM_SENDER_ID</key>
+	<string>190217884548</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.hierarchy.firebase</string>
+	<key>PROJECT_ID</key>
+	<string>financial-tracker-backend</string>
+	<key>STORAGE_BUCKET</key>
+	<string>financial-tracker-backend.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:190217884548:ios:961bea91ea7073824803d1</string>
+</dict>
+</plist>

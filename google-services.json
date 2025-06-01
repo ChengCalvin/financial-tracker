@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "190217884548",
+    "project_id": "financial-tracker-backend",
+    "storage_bucket": "financial-tracker-backend.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190217884548:android:c5b21f52fe356a074803d1",
+        "android_client_info": {
+          "package_name": "com.hierarchy.firebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "190217884548-s0sbqdakoje273ca9e4nsa7o2evc5kg9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hierarchy.firebase",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "190217884548-snq5ougpt4giok6pcenenkli74hc5t1g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmNzH-iRDvz41OiqFM1v-NDwufpIViMQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "190217884548-4fmd0g1hjv9u73phacnt8j3upbca6904.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "190217884548-lq6fnf4lk813hkt6f8t8esrmv2n641k0.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hierarchy.firebase"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
