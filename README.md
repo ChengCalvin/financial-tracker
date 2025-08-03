@@ -1,50 +1,160 @@
-# Welcome to your Expo app 👋
+# Financial Tracker
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive React Native budgeting app built with Expo and Firebase, featuring dynamic category management and real-time data synchronization.
 
-## Get started
+## 🚀 Features
 
-1. Install dependencies
+### Core Functionality
+- **Income & Expense Tracking**: Add, view, and delete financial transactions
+- **Dynamic Categories**: Use default categories or create your own custom ones
+- **Real-time Sync**: Automatic synchronization with Firebase Firestore
+- **Budget Analytics**: View income, expenses, net savings, and savings rate
+- **User Authentication**: Secure login with Firebase Auth
 
+### Technical Features
+- **TypeScript**: Full type safety throughout the application
+- **Zustand State Management**: Lightweight and efficient state management
+- **Firebase Integration**: Authentication and Firestore database
+- **Offline Support**: Local storage with AsyncStorage
+- **Modern UI**: Clean, intuitive interface with React Native
+
+## 📱 Screens
+
+### Home Dashboard
+- Overview of monthly income, expenses, and net savings
+- Quick action buttons for common tasks
+- Recent transactions list
+- Savings rate calculation
+
+### Transactions Screen
+- Add new income or expense transactions
+- View all transactions with details
+- Delete transactions with confirmation
+- Category selection with visual indicators
+- Transaction type toggle (Income/Expense)
+
+## 🏗️ Architecture
+
+### Models
+- **Transaction**: Base class for all financial transactions
+- **Income**: Extends Transaction with income-specific methods
+- **Expense**: Extends Transaction with expense-specific methods
+- **Budget**: Manages collections of transactions and provides analytics
+- **CategoryManager**: Handles dynamic category creation and management
+
+### State Management
+- **Zustand Store**: Centralized state management with persistence
+- **Firebase Sync**: Automatic data synchronization
+- **Error Handling**: Comprehensive error management
+
+### Database Structure
+```
+users/
+  {userId}/
+    budgets/
+      {budgetId}/
+        data: JSON string of budget data
+        updatedAt: timestamp
+```
+
+## 🛠️ Setup
+
+### Prerequisites
+- Node.js (v16 or higher)
+- Expo CLI
+- Firebase project with Authentication and Firestore enabled
+
+### Installation
+1. Clone the repository
+2. Install dependencies:
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Configure Firebase:
+   - Add your Firebase config to `firebase.ts`
+   - Set up environment variables for Firebase credentials
 
+4. Start the development server:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+### Environment Variables
+Create a `.env` file with your Firebase configuration:
+```
+EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+EXPO_PUBLIC_FIREBASE_DATABASE=your_database_url
+EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 📊 Usage
 
-## Learn more
+### Adding Transactions
+1. Navigate to the Transactions screen
+2. Tap the "+" button
+3. Choose transaction type (Income or Expense)
+4. Fill in the details:
+   - Name (required)
+   - Description (optional)
+   - Amount (required)
+   - Category (required)
+5. Tap "Add Transaction"
 
-To learn more about developing your project with Expo, look at the following resources:
+### Managing Categories
+- **Default Categories**: Pre-built categories for common transactions
+- **Custom Categories**: Create your own categories with custom colors
+- **Category Types**: Income, Expense, or Both
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Viewing Analytics
+- **Home Screen**: Monthly overview with key metrics
+- **Transactions List**: Detailed view of all transactions
+- **Real-time Updates**: Changes sync automatically across devices
 
-## Join the community
+## 🔧 Customization
 
-Join our community of developers creating universal apps.
+### Adding New Categories
+The system supports dynamic category creation. Users can:
+- Create custom categories with unique names
+- Choose category types (Income/Expense/Both)
+- Select custom colors for visual distinction
+- Delete custom categories (default categories are protected)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Extending the System
+The modular architecture makes it easy to add new features:
+- New transaction types
+- Additional analytics
+- Custom reporting
+- Export functionality
+
+## 🚀 Deployment
+
+### Expo Build
+```bash
+npx expo build:android
+npx expo build:ios
+```
+
+### Firebase Deployment
+Ensure your Firebase project is properly configured with:
+- Authentication enabled
+- Firestore database created
+- Security rules configured
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📞 Support
+
+For support or questions, please open an issue in the repository.

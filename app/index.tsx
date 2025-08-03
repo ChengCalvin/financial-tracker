@@ -1,8 +1,6 @@
-import { getAuth } from "@react-native-firebase/auth";
-import { FirebaseError } from "firebase/app";
-import { useState } from "react";
-import { Button, KeyboardAvoidingView, StyleSheet, TextInput, View } from "react-native";
-// import { auth } from "../firebase"; // Adjust the import path as necessary
+import auth from "@react-native-firebase/auth";
+import React, { useState } from "react";
+import { ActivityIndicator, Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function Index() {
   const [email, setEmail] = useState("");
@@ -13,10 +11,10 @@ export default function Index() {
   const signUp = async () => {
     setLoading(true);
     try {
-      await getAuth().createUserWithEmailAndPassword(email, password);
+      const res = await auth().createUserWithEmailAndPassword(email, password);
+      console.log(res);
     } catch (e: any) {
-      const error = e as FirebaseError;
-      setError("Registration Error:" + error.message);
+      setError("Registration Error: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -25,11 +23,10 @@ export default function Index() {
   const signIn = async () => {
     setLoading(true);
     try {
-      await getAuth().signInWithEmailAndPassword(email, password);
+      await auth().signInWithEmailAndPassword(email, password);
     } catch (e: any) {
-      const error = e as FirebaseError;
-      setError("Sign in Error:" + error.message);
-      alert(error.message);
+      setError("Sign in Error: " + e.message);
+      alert(e.message);
     } finally {
       setLoading(false);
     }
@@ -44,23 +41,27 @@ export default function Index() {
       }}
     >
       <KeyboardAvoidingView behavior="padding">
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={(text) => setEmail(text)}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="Password"
-            value={password}
-            onChangeText={(text) => setPassword(text)}
-            secureTextEntry
-            style={styles.input}
-          />
-          {/* {error ? <Text>{error}</Text> : null} */}
-          <Button title="Sign Up" onPress={signUp} disabled={loading} />
-          <Button title="Sign In" onPress={signIn} disabled={loading} />
-
+        <TextInput
+          placeholder="Email"
+          value={email}
+          onChangeText={(text) => setEmail(text)}
+          style={styles.input}
+        />
+        <TextInput
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => setPassword(text)}
+          secureTextEntry
+          style={styles.input}
+        />
+        {error ? <Text>{error}</Text> : null}
+        {
+          loading ? <ActivityIndicator size="small" style={{margin: 28}} /> :
+            <React.Fragment>
+              <Button title="Sign Up" onPress={signUp} disabled={loading} />
+              <Button title="Sign In" onPress={signIn} disabled={loading} />
+            </React.Fragment>
+        }
       </KeyboardAvoidingView>
     </View>
   );

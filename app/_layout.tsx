@@ -1,29 +1,38 @@
-import { firebaseConfig } from "@/firebase";
-import { initializeApp } from "@react-native-firebase/app";
-import { FirebaseAuthTypes, getAuth, onAuthStateChanged } from "@react-native-firebase/auth";
-import { Stack } from "expo-router";
-import React, { useEffect, useState } from "react";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-// import { firebaseConfig } from "../firebase"; // Adjust the import path as necessary
 
-initializeApp(firebaseConfig, "Hierarchy");
 export default function RootLayout() {
   const [initializing, setInitializing] = useState(true);
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+
+  const segments = useSegments();
+  const router = useRouter();
 
   const handleAuthStateChanged = (user: any) => {
     setUser(user);
     if (initializing) {
       setInitializing(false);
-
     }
   };
 
   useEffect(() => {
-    // const subscriber = auth.onAuthStateChanged(onAuthStateChanged)
-    const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
+    const subscriber = auth().onAuthStateChanged(handleAuthStateChanged);
     return subscriber; // unsubscribe on unmount
   }, []);
+
+  useEffect(() => {
+    if (initializing) { return; }
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (user && !inAuthGroup) {
+      router.replace("/(auth)/home");
+    } else if (!user && inAuthGroup) {
+      router.replace("/");
+    }
+  }, [user, initializing]);
 
   if (initializing) {
     return (
@@ -33,9 +42,20 @@ export default function RootLayout() {
     );
   }
 
-  if (!user) {
-    // User is not signed in, redirect to sign-in screen
-    // return <Stack screenOptions={{ headerShown: false }} initialRouteName="signIn" />;
-  }
-  return <Stack />;
+  return (
+    <Stack>
+      <Stack.Screen
+        name="index"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(auth)"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
+  );
 }
