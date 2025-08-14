@@ -8,6 +8,7 @@
     "scheme": "financialtracker",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "platforms": ["ios", "android"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.hierarchy.firebase",
@@ -16,7 +17,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "permissions": ["RECEIVE_BOOT_COMPLETED"],
+        "useNextNotificationsApi": true
       },
       "edgeToEdgeEnabled": true,
       "package": "com.hierarchy.firebase",

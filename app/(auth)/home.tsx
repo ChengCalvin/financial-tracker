@@ -1,9 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
-import auth from '@react-native-firebase/auth';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import auth from "@react-native-firebase/auth";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Alert,
+  Dimensions,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -12,32 +13,61 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
-} from 'react-native';
+  View,
+} from "react-native";
+import { BarChart, PieChart } from "react-native-chart-kit";
+import PagerView from "react-native-pager-view";
 
-import { useBudgetStore } from '../../store/budgetStore';
+import { useBudgetStore } from "../../store/budgetStore";
+
+const screenWidth = Dimensions.get("window").width;
 
 export default function HomeScreen() {
   const router = useRouter();
   const currentUser = auth().currentUser;
-  
-  const { budget, loading, initializeBudget, getBudgetSummary, deleteTransaction, addTransaction, getValidCategoryManager } = useBudgetStore();
+
+  const {
+    budget,
+    loading,
+    initializeBudget,
+    getBudgetSummary,
+    deleteTransaction,
+    addTransaction,
+    getValidCategoryManager,
+  } = useBudgetStore();
 
   // Edit state
   const [editingTransactionId, setEditingTransactionId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
-    name: '',
-    description: '',
-    amount: '',
-    categoryId: '',
+    name: "",
+    description: "",
+    amount: "",
+    categoryId: "",
   });
-  const [editFormattedAmount, setEditFormattedAmount] = useState('');
+  const [editFormattedAmount, setEditFormattedAmount] = useState("");
+  const [activePage, setActivePage] = useState(0);
+
+  // Customizable reports
+  const [selectedReports, setSelectedReports] = useState<string[]>([
+    "incomeVsExpenses",
+    "savingsRate",
+    "categoryBreakdown",
+  ]);
 
   // Initialize budget when component mounts
   useEffect(() => {
     if (currentUser && !budget) {
       initializeBudget(currentUser.uid);
     }
+
+    // Load user preferences for reports
+    // const loadPreferences = async () => {
+    //   const storedReports = await AsyncStorage.getItem("selectedReports");
+    //   if (storedReports) {
+    //     setSelectedReports(JSON.parse(storedReports));
+    //   }
+    // };
+    // loadPreferences();
   }, [currentUser, budget, initializeBudget]);
 
   const budgetSummary = getBudgetSummary();
@@ -53,6 +83,123 @@ export default function HomeScreen() {
     );
   }
 
+  const renderReport = (reportType: string) => {
+    switch (reportType) {
+      case "incomeVsExpenses":
+        return (
+          <View style={styles.reportContainer}>
+            <Text style={styles.reportTitle}>Income vs Expenses</Text>
+            <BarChart
+              data={{
+                labels: ["Income", "Expenses"],
+                datasets: [
+                  {
+                    data: [
+                      budgetSummary?.totalIncome || 0,
+                      budgetSummary?.totalExpenses || 0,
+                    ],
+                  },
+                ],
+              }}
+              width={screenWidth - 40} // Adjust width to fit the screen
+              height={220}
+              chartConfig={{
+                backgroundColor: "#f8f9fa",
+                backgroundGradientFrom: "#f8f9fa",
+                backgroundGradientTo: "#f8f9fa",
+                decimalPlaces: 2,
+                color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+              }}
+              style={styles.chart} yAxisLabel={""} yAxisSuffix={""}            />
+          </View>
+        );
+      case "savingsRate":
+        return (
+          <View style={styles.reportContainer}>
+            <Text style={styles.reportTitle}>Savings Rate</Text>
+            <PieChart
+              data={[
+                {
+                  name: "Saved",
+                  amount: budgetSummary ? budgetSummary.totalIncome - budgetSummary.totalExpenses : 0,
+                  color: "#4CAF50",
+                  legendFontColor: "#333",
+                  legendFontSize: 12,
+                },
+                {
+                  name: "Spent",
+                  amount: budgetSummary?.totalExpenses || 0,
+                  color: "#F44336",
+                  legendFontColor: "#333",
+                  legendFontSize: 12,
+                },
+              ]}
+              width={screenWidth - 40}
+              height={220}
+              chartConfig={{
+                backgroundColor: "#f8f9fa",
+                backgroundGradientFrom: "#f8f9fa",
+                backgroundGradientTo: "#f8f9fa",
+                color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+              }}
+              accessor={"amount"}
+              backgroundColor={"transparent"}
+              paddingLeft={"15"}
+              style={styles.chart}
+            />
+          </View>
+        );
+      case "categoryBreakdown":
+        const categoryData = budget?.getCategorySummary().map((category) => ({
+          name: category.name,
+          amount: category.total,
+          color: `#${Math.floor(Math.random() * 16777215).toString(16)}`, // Random color
+          legendFontColor: "#333",
+          legendFontSize: 12,
+        }));
+
+        return (
+          <View style={styles.reportContainer}>
+            <Text style={styles.reportTitle}>Category Breakdown</Text>
+            <PieChart
+              data={categoryData}
+              width={screenWidth - 40}
+              height={220}
+              chartConfig={{
+                backgroundColor: "#f8f9fa",
+                backgroundGradientFrom: "#f8f9fa",
+                backgroundGradientTo: "#f8f9fa",
+                color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+              }}
+              accessor={"amount"}
+              backgroundColor={"transparent"}
+              paddingLeft={"15"}
+              style={styles.chart}
+            />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderPaginationDots = () => {
+    return (
+      <View style={styles.paginationContainer}>
+        {selectedReports.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.paginationDot,
+              activePage === index && styles.paginationDotActive,
+            ]}
+          />
+        ))}
+      </View>
+    );
+  };
+
   const handleSignOut = () => {
     auth().signOut();
   };
@@ -65,18 +212,18 @@ export default function HomeScreen() {
   const formatCurrency = (value: string): string => {
     // Remove all non-numeric characters except decimal point
     const numericValue = value.replace(/[^0-9.]/g, '');
-    
+
     // Handle multiple decimal points
     const parts = numericValue.split('.');
     if (parts.length > 2) {
       return parts[0] + '.' + parts.slice(1).join('');
     }
-    
+
     // Limit to 2 decimal places
     if (parts.length === 2 && parts[1].length > 2) {
       return parts[0] + '.' + parts[1].substring(0, 2);
     }
-    
+
     return numericValue;
   };
 
@@ -147,7 +294,7 @@ export default function HomeScreen() {
       // We'll force a re-render by calling the store's sync method
       const { syncWithFirebase } = useBudgetStore.getState();
       await syncWithFirebase();
-      
+
       cancelQuickEdit();
     } catch (error) {
       Alert.alert('Error', 'Failed to update transaction');
@@ -164,31 +311,41 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcomeText}>Welcome back!</Text>
-          <Text style={styles.userEmail}>{currentUser?.email}</Text>
+          <Text style={styles.userEmail}>
+            {currentUser?.displayName || currentUser?.email}
+          </Text>
         </View>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <TouchableOpacity style={styles.signOutButton} onPress={() => auth().signOut()}>
           <Ionicons name="log-out-outline" size={24} color="#F44336" />
         </TouchableOpacity>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.quickActions}>
-        <TouchableOpacity style={styles.actionButton} onPress={navigateToTransactions}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => (router as any).push("transactions")}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="add-circle-outline" size={32} color="#007AFF" />
           </View>
           <Text style={styles.actionText}>Add Transaction</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => (router as any).push("reports")}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="analytics-outline" size={32} color="#4CAF50" />
           </View>
           <Text style={styles.actionText}>View Reports</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => (router as any).push("settings")}
+        >
           <View style={styles.actionIcon}>
             <Ionicons name="settings-outline" size={32} color="#FF9800" />
           </View>
@@ -199,40 +356,30 @@ export default function HomeScreen() {
       {/* Budget Overview */}
       {budgetSummary && (
         <View style={styles.overviewContainer}>
-          <Text style={styles.overviewTitle}>This Month</Text>
-          
-          <View style={styles.overviewRow}>
-            <View style={styles.overviewItem}>
-              <Text style={styles.overviewLabel}>Income</Text>
-              <Text style={styles.overviewAmountIncome}>
-                ${budgetSummary.totalIncome.toFixed(2)}
-              </Text>
-            </View>
-            <View style={styles.overviewItem}>
-              <Text style={styles.overviewLabel}>Expenses</Text>
-              <Text style={styles.overviewAmountExpense}>
-                ${budgetSummary.totalExpenses.toFixed(2)}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.netContainer}>
-            <Text style={styles.netLabel}>Net Savings</Text>
-            <Text style={[
-              styles.netAmount,
-              { color: budgetSummary.netAmount >= 0 ? '#4CAF50' : '#F44336' }
-            ]}>
-              ${budgetSummary.netAmount.toFixed(2)}
-            </Text>
-            <Text style={styles.savingsRate}>
-              {budgetSummary.savingsRate.toFixed(1)}% of income saved
-            </Text>
-          </View>
+          <Text style={styles.overviewTitle}>Budget Overview</Text>
+          <PagerView 
+          style={styles.pagerView} 
+          initialPage={0}
+          onPageSelected={(e) => setActivePage(e.nativeEvent.position)}
+          >
+            {selectedReports.map((reportType, index) => (
+              <View key={index} style={styles.page}>
+                {renderReport(reportType)}
+              </View>
+            ))}
+          </PagerView>
+          {renderPaginationDots()}
+          <TouchableOpacity
+            style={styles.customizeButton}
+            onPress={() => (router as any).push("customizeOverview")}
+          >
+            <Text style={styles.customizeButtonText}>Customize Overview</Text>
+          </TouchableOpacity>
         </View>
       )}
 
       {/* Recent Transactions */}
-      <View style={styles.recentContainer}>
+      <ScrollView style={styles.recentContainer}>
         <View style={styles.recentHeader}>
           <Text style={styles.recentTitle}>Recent Transactions</Text>
           <TouchableOpacity onPress={navigateToTransactions}>
@@ -261,7 +408,7 @@ export default function HomeScreen() {
                       value={editFormData.name}
                       onChangeText={(text) => setEditFormData({ ...editFormData, name: text })}
                     />
-                    
+
                     <TextInput
                       style={styles.editInput}
                       placeholder="Description (optional)"
@@ -269,7 +416,7 @@ export default function HomeScreen() {
                       onChangeText={(text) => setEditFormData({ ...editFormData, description: text })}
                       multiline
                     />
-                    
+
                     <View style={styles.amountContainer}>
                       <Text style={styles.currencySymbol}>$</Text>
                       <TextInput
@@ -282,7 +429,7 @@ export default function HomeScreen() {
                         autoCorrect={false}
                       />
                     </View>
-                    
+
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryContainer}>
                       {getAvailableCategories()?.map((category) => (
                         <TouchableOpacity
@@ -303,7 +450,7 @@ export default function HomeScreen() {
                         </TouchableOpacity>
                       ))}
                     </ScrollView>
-                    
+
                     <View style={styles.editActions}>
                       <TouchableOpacity
                         style={[styles.editButton, styles.cancelEditButton]}
@@ -311,7 +458,7 @@ export default function HomeScreen() {
                       >
                         <Text style={styles.cancelEditButtonText}>Cancel</Text>
                       </TouchableOpacity>
-                      
+
                       <TouchableOpacity
                         style={[styles.editButton, styles.saveEditButton]}
                         onPress={saveQuickEdit}
@@ -322,7 +469,7 @@ export default function HomeScreen() {
                   </View>
                 ) : (
                   // Normal view
-                  <>
+                  <View style={styles.recentItem}>
                     <View style={styles.recentItemInfo}>
                       <Text style={styles.recentItemName}>{transaction.getName()}</Text>
                       <Text style={styles.recentItemCategory}>
@@ -345,13 +492,13 @@ export default function HomeScreen() {
                         </TouchableOpacity>
                       </View>
                     </View>
-                  </>
+                  </View>
                 )}
               </View>
             ))}
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -366,8 +513,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: 'white',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    // backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -471,15 +619,15 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   recentContainer: {
-    backgroundColor: 'white',
-    margin: 16,
+    // backgroundColor: 'white',
+    margin: 8,
     padding: 20,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 4,
+    // elevation: 3,
   },
   recentHeader: {
     flexDirection: 'row',
@@ -521,10 +669,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    minHeight: 60,
+    paddingVertical: 8,
+    // borderBottomWidth: 1,
+    // borderBottomColor: '#f0f0f0',
+    minHeight: 40,
   },
   recentItemInfo: {
     flex: 1,
@@ -631,10 +779,10 @@ const styles = StyleSheet.create({
   },
   editButton: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#007AFF',
+    // borderWidth: 1,
+    // borderColor: '#007AFF',
   },
   cancelEditButton: {
     borderColor: '#F44336',
@@ -658,10 +806,91 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    minWidth: 120,
+    // minWidth: 120,
   },
   actionButtons: {
     flexDirection: 'row',
     marginLeft: 8,
+  },
+  pagerView: {
+    height: 200,
+  },
+  page: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  reportContainer: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  reportTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: "#333",
+  },
+  reportRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  reportItem: {
+    alignItems: "center",
+  },
+  reportLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  reportValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 8,
+  },
+  categoryLabel: {
+    fontSize: 14,
+    color: "#666",
+  },
+  categoryValue: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  customizeButton: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: "#007AFF",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  customizeButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+  },
+  paginationContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#e0e0e0",
+    marginHorizontal: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: "#007AFF",
   },
 });

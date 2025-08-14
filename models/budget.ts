@@ -25,6 +25,7 @@ export class Budget {
     private name: string;
     private description: string;
     private categoryManager: CategoryManager;
+    private limit: number = 1000; // Default budget limit
 
     constructor(id: string, name: string, description: string = '', categoryManager?: CategoryManager) {
         this.id = id;
@@ -48,6 +49,18 @@ export class Budget {
 
     public getCategoryManager(): CategoryManager {
         return this.categoryManager;
+    }
+
+    public getLimit(): number {
+        return this.limit;
+    }
+
+    public setLimit(newLimit: number): void {
+        if (newLimit > 0) {
+            this.limit = newLimit;
+        } else {
+            throw new Error("Budget limit must be greater than 0");
+        }
     }
 
     // Transaction management
@@ -81,7 +94,7 @@ export class Budget {
     }
 
     public getTransactionsByDateRange(startDate: Date, endDate: Date): Transaction[] {
-        return this.transactions.filter(t => 
+        return this.transactions.filter(t =>
             t.getDate() >= startDate && t.getDate() <= endDate
         );
     }
@@ -116,7 +129,7 @@ export class Budget {
         console.log('Budget.getBudgetSummary() called');
         console.log('Transactions count:', this.transactions.length);
         console.log('CategoryManager type:', typeof this.categoryManager);
-        
+
         const totalIncome = this.getTotalIncome();
         const totalExpenses = this.getTotalExpenses();
         const incomeCount = this.getTransactionsByType(TransactionType.INCOME).length;
@@ -130,7 +143,7 @@ export class Budget {
             expenseCount,
             savingsRate: totalIncome > 0 ? ((totalIncome - totalExpenses) / totalIncome) * 100 : 0
         };
-        
+
         console.log('Budget summary calculated:', summary);
         return summary;
     }
@@ -138,9 +151,9 @@ export class Budget {
     public getIncomeByCategory(): CategorySummary[] {
         const incomeTransactions = this.getTransactionsByType(TransactionType.INCOME);
         const totalIncome = this.getTotalIncome();
-        
+
         const categoryMap = new Map<string, { amount: number, count: number, category: Category }>();
-        
+
         incomeTransactions.forEach(transaction => {
             const category = transaction.getCategory();
             const current = categoryMap.get(category.id) || { amount: 0, count: 0, category };
@@ -162,9 +175,9 @@ export class Budget {
     public getExpensesByCategory(): CategorySummary[] {
         const expenseTransactions = this.getTransactionsByType(TransactionType.EXPENSE);
         const totalExpenses = this.getTotalExpenses();
-        
+
         const categoryMap = new Map<string, { amount: number, count: number, category: Category }>();
-        
+
         expenseTransactions.forEach(transaction => {
             const category = transaction.getCategory();
             const current = categoryMap.get(category.id) || { amount: 0, count: 0, category };
@@ -187,11 +200,11 @@ export class Budget {
         const startDate = new Date(year, month - 1, 1);
         const endDate = new Date(year, month, 0, 23, 59, 59);
         const monthlyTransactions = this.getTransactionsByDateRange(startDate, endDate);
-        
+
         const totalIncome = monthlyTransactions
             .filter(t => t.isIncome())
             .reduce((sum, t) => sum + t.getAmount(), 0);
-        
+
         const totalExpenses = monthlyTransactions
             .filter(t => t.isExpense())
             .reduce((sum, t) => sum + t.getAmount(), 0);
@@ -225,6 +238,53 @@ export class Budget {
             .filter(expense => expense.isDiscretionary());
     }
 
+    getMonthlyIncomeData(): number[] {
+        const monthlyData = Array(12).fill(0);
+        this.transactions
+            .filter((t) => t.isIncome())
+            .forEach((t) => {
+                const month = t.getDate().getMonth();
+                monthlyData[month] += t.getAmount();
+            });
+        return monthlyData;
+    }
+
+    getMonthlyExpenseData(): number[] {
+        const monthlyData = Array(12).fill(0);
+        this.transactions
+            .filter((t) => !t.isIncome())
+            .forEach((t) => {
+                const month = t.getDate().getMonth();
+                monthlyData[month] += t.getAmount();
+            });
+        return monthlyData;
+    }
+
+    public getCategorySummary(): { id: string; name: string; total: number; percentage: number }[] {
+        const categoryMap = new Map<string, { total: number; name: string }>();
+    
+        // Group transactions by category
+        this.transactions.forEach((transaction) => {
+            const category = transaction.getCategory();
+            const current = categoryMap.get(category.id) || { total: 0, name: category.name };
+            categoryMap.set(category.id, {
+                total: current.total + transaction.getAmount(),
+                name: category.name,
+            });
+        });
+    
+        // Calculate the total amount for all transactions
+        const totalAmount = this.transactions.reduce((sum, t) => sum + t.getAmount(), 0);
+    
+        // Map the category data into the expected format
+        return Array.from(categoryMap.entries()).map(([id, data]) => ({
+            id,
+            name: data.name,
+            total: data.total,
+            percentage: totalAmount > 0 ? (data.total / totalAmount) * 100 : 0,
+        }));
+    }
+
     // Utility methods
     public getTransactionCount(): number {
         return this.transactions.length;
@@ -239,6 +299,7 @@ export class Budget {
             id: this.id,
             name: this.name,
             description: this.description,
+            limit: this.limit,
             categories: this.categoryManager.exportCategories(),
             transactions: this.transactions.map(t => ({
                 id: t.getId(),
@@ -256,27 +317,28 @@ export class Budget {
         try {
             const data = JSON.parse(jsonData);
             console.log('Importing budget data:', data);
-            
+
             // Import basic properties
             if (data.id) this.id = data.id;
             if (data.name) this.name = data.name;
             if (data.description) this.description = data.description;
-            
+            this.limit = data.limit || 1000;
+
             // Import categories if provided
             if (data.categories) {
                 this.categoryManager.importCategories(data.categories);
             }
-            
+
             // Clear existing transactions
             this.transactions = [];
-            
+
             // Import transactions
             if (data.transactions && Array.isArray(data.transactions)) {
                 console.log('Importing', data.transactions.length, 'transactions');
                 data.transactions.forEach((t: any) => {
                     const category = this.categoryManager.getCategory(t.categoryId);
                     if (category) {
-                        const transaction = t.type === TransactionType.INCOME 
+                        const transaction = t.type === TransactionType.INCOME
                             ? new Income(t.id, t.name, t.description, t.amount, new Date(t.date), category)
                             : new Expense(t.id, t.name, t.description, t.amount, new Date(t.date), category);
                         this.addTransaction(transaction);
@@ -285,7 +347,7 @@ export class Budget {
                     }
                 });
             }
-            
+
             console.log('Budget import completed. Transactions count:', this.transactions.length);
             return true;
         } catch (error) {

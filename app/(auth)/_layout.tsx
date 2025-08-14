@@ -17,6 +17,20 @@ export default function AuthLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="reports"
+        options={{
+          title: "Reports",
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="(auth)/settings"
+        options={{
+          title: "Settings",
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

@@ -1,3 +1,4 @@
+import { useBudgetStore } from "@/store/budgetStore";
 import auth from "@react-native-firebase/auth";
 import React, { useState } from "react";
 import { ActivityIndicator, Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from "react-native";
@@ -11,8 +12,8 @@ export default function Index() {
   const signUp = async () => {
     setLoading(true);
     try {
-      const res = await auth().createUserWithEmailAndPassword(email, password);
-      console.log(res);
+      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      await useBudgetStore.getState().initializeBudget(userCredential.user.uid);
     } catch (e: any) {
       setError("Registration Error: " + e.message);
     } finally {

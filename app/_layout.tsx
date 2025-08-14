@@ -1,4 +1,5 @@
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -9,6 +10,23 @@ export default function RootLayout() {
 
   const segments = useSegments();
   const router = useRouter();
+
+  useEffect(() => {
+    // Listener for foreground notifications
+    const subscription = Notifications.addNotificationReceivedListener((notification) => {
+      console.log("Notification received:", notification);
+    });
+
+    // Listener for notification interactions
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("Notification response:", response);
+    });
+
+    return () => {
+      subscription.remove();
+      responseSubscription.remove();
+    };
+  }, []);
 
   const handleAuthStateChanged = (user: any) => {
     setUser(user);
